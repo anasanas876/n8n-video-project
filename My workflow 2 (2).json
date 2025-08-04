@@ -1,0 +1,726 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Idea",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Enter Idea",
+              "placeholder": "Describe your idea here.",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -3920,
+        192
+      ],
+      "id": "9aef09b5-d570-4844-89d8-68521391f524",
+      "name": "On form submission",
+      "webhookId": "bc2f5891-d6fb-4426-a188-202fddb41d41"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4",
+          "mode": "list",
+          "cachedResultName": "GPT-4"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json['Enter Idea'] }}"
+            },
+            {
+              "content": "You are an assistant that extracts and organizes content for video automation workflows.\n\nGiven a user prompt, output the following in clean JSON:\n- \"title\": A catchy YouTube title\n- \"script\": A short video script (1–2 paragraphs)\n- \"platform\": The platform where the video will be uploaded (e.g., YouTube, Instagram, TikTok)\n- \"duration\": Video duration in seconds or minutes, based on what user said (number only)\n\nIf any field is missing in the user prompt, mark it as \"unknown\".\n",
+              "role": "system"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -3616,
+        192
+      ],
+      "id": "30d6c8bf-de6a-4a9f-b3c4-4d4100457f96",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "QsKTaNC6JniniqgJ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const content = JSON.parse(items[0].json.message.content);\nreturn [{ json: content }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3264,
+        192
+      ],
+      "id": "1554ed35-94bb-41a7-8e64-978c9917ab67",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cef91532-1811-42b3-bfc2-457c9c6ca16f",
+              "name": "title",
+              "value": "={{$json[\"title\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "dfb387f5-aa14-43d8-b60c-d4ed03b1b2ce",
+              "name": "script",
+              "value": "={{$json[\"script\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "36fc83ed-98a8-4be0-a2cc-dbab0797cf11",
+              "name": "duration",
+              "value": "={{$json[\"duration\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "a2ff7d82-7331-4528-9fe0-4872892aded1",
+              "name": "platform",
+              "value": "={{$json[\"platform\"]}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3056,
+        192
+      ],
+      "id": "46b22ce9-33fe-4caa-a071-26154b3bc77f",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4",
+          "mode": "list",
+          "cachedResultName": "GPT-4"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "Generate a title {{$json[\"title\"]}  and Description based on {{$json[\"script\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -832,
+        -240
+      ],
+      "id": "8bbafbea-1709-4fd6-8f11-cd677c997a27",
+      "name": "Message a model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "QsKTaNC6JniniqgJ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "xi-api-key",
+              "value": "{{env.YOUR-API-KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{$json[\"script\"]}}"
+            },
+            {
+              "name": "model_id",
+              "value": "eleven_monolingual_v1"
+            },
+            {
+              "name": "stability",
+              "value": "0.5"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2608,
+        176
+      ],
+      "id": "c66b5ca9-304d-4b1f-a38d-9da9a465ff33",
+      "name": "Eleven Labs"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Assumes one result\nconst video = items[0].json.videos[0];\n\nreturn [{\n  json: {\n    video_url: video.video_files.find(f => f.quality === \"hd\").link,\n    duration: video.duration,\n    width: video.width,\n    height: video.height,\n    description: \"Fetched from Pexels\"\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1408,
+        -336
+      ],
+      "id": "60b6523a-eda2-420c-9531-e634d9852254",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "url": "={{$json[\"video_url\"]}}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1104,
+        -320
+      ],
+      "id": "2d189d9f-4f6e-47b2-825a-dd62cacf269a",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "My Test Video Upload",
+        "regionCode": "PK",
+        "categoryId": "=22",
+        "options": {
+          "description": "uploaded via n8n",
+          "privacyStatus": "private"
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        624,
+        -192
+      ],
+      "id": "7e129875-104a-4137-981f-7ace867657d1",
+      "name": "Upload a video",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "bWr0vrCSyhAtsnlw",
+          "name": "YouTube account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8000/docs",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "audio",
+              "value": "data"
+            },
+            {
+              "name": "video",
+              "value": "data1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -896,
+        -448
+      ],
+      "id": "a79a9d09-d1a8-46f9-9824-45ea7d7a925d",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "https://api.pexels.com/v1/search?query=technology+ai&per_page=1",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "=Artifical Intelligence "
+            },
+            {
+              "name": "per_page",
+              "value": "1"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "fcGLWz9m47mihucujvLZDg7JBRknas9XdzDausyuw97WzBnRsBuzmfrl"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1968,
+        192
+      ],
+      "id": "1215187e-db63-4827-906c-e2a508beea56",
+      "name": "Image"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b776c038-f485-453b-bb9a-4e442f96d81a",
+              "name": "image_url",
+              "value": "={   \"image_url\": \"={{ $json.photos[0].src.original }}\" }",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1344,
+        192
+      ],
+      "id": "15eddd24-7908-4343-a1da-955ea8269044",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "url": "=https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1024,
+        192
+      ],
+      "id": "f01c0d1b-9176-4b2d-ab32-fc8e02831801",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.runwayml.com/v1/image_to_video",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer key_8c7e1fdb46a700b05aa64ae41c974029b7d15205f32deeaf4ac48554a29935c8c4f1e36f4231892ea9fb23e309ce70284e688d35efca4c3432e24d153c3154c3"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "gen4_turbo"
+            },
+            {
+              "name": "promptimage",
+              "value": "={{ $('Image').item.json.photos[0].url }}"
+            },
+            {
+              "name": "ratio",
+              "value": "1280:720"
+            },
+            {
+              "name": "duration",
+              "value": "5"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -784,
+        192
+      ],
+      "id": "3d2bb46c-6675-445a-95ad-265f75e0251d",
+      "name": "HTTP Request3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5ef29481-9d72-4363-a935-1320029c9d9a",
+              "name": "job_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -608,
+        192
+      ],
+      "id": "2905df17-2a0f-40f8-9e6c-7f7a749d90c6",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        16
+      ],
+      "id": "de04b18b-f320-4a9b-b398-3221238df63a",
+      "name": "Wait",
+      "webhookId": "551e5bce-328c-4209-bac0-33d4dcc30438"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.runwayml.com/v1/image_to_video/{{ $json.job_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer key_8c7e1fdb46a700b05aa64ae41c974029b7d15205f32deeaf4ac48554a29935c8c4f1e36f4231892ea9fb23e309ce70284e688d35efca4c3432e24d153c3154c3"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -176,
+        16
+      ],
+      "id": "fc2b65d5-2a27-408d-913d-36b9255e291b",
+      "name": "HTTP Request4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "917b5f01-f7ea-4173-9814-ee461db7666e",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "succeeded",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        32,
+        16
+      ],
+      "id": "764c7dfa-48fc-43d9-87b9-4a1ab164feab",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d85fca96-36a6-4634-b849-af4b1081485d",
+              "name": "video_url",
+              "value": "={{ $json.videoUrl }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        -80
+      ],
+      "id": "b59d68ad-efe4-4864-bc7b-5d099f1f9605",
+      "name": "Edit Fields3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Eleven Labs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        []
+      ]
+    },
+    "Eleven Labs": {
+      "main": [
+        []
+      ]
+    },
+    "Code2": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        []
+      ]
+    },
+    "Image": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "636ebc14-4053-44e4-8777-04a87d8831c1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b3fe5262f900b78487f9b00ad864a5f88f3dae1a9a23907298195e2319414152"
+  },
+  "id": "GvqZSNwwsNFx5LIR",
+  "tags": []
+}
